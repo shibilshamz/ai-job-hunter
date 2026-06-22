@@ -38,8 +38,8 @@ COL = {
 }
 
 STATUS = {
-    "auto_applied":    "Auto Applied ✅",
-    "queued":          "Queued 🟡",
+    "auto_applied":    "CV Ready ✅",
+    "queued":          "CV Ready 🟡",
     "skipped":         "Skipped ❌",
     "manual_applied":  "Manual Applied ✅",
     "failed":          "Failed ⚠️",
