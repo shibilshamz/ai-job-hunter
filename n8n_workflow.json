@@ -1,0 +1,134 @@
+{
+  "name": "AI Job Hunter — Dubai Daily Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5679/run",
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "id": "2407340e-4713-45eb-9364-bec433105fc3",
+      "name": "🕷 Run All Scrapers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst i = data.indeed     || { queued: 0, skipped: 0, duplicates: 0 };\nconst b = data.bayt       || { queued: 0, skipped: 0, duplicates: 0 };\nconst n = data.naukrigulf || { queued: 0, skipped: 0, duplicates: 0 };\n\nconst totalQueued     = i.queued     + b.queued     + n.queued;\nconst totalSkipped    = i.skipped    + b.skipped    + n.skipped;\nconst totalDuplicates = i.duplicates + b.duplicates + n.duplicates;\n\nconst now = new Date();\nconst uaeDate = new Date(now.getTime() + 4 * 60 * 60 * 1000);\nconst dateStr = uaeDate.toISOString().split('T')[0];\n\nconst msg = [\n  `🤖 *AI Job Hunter — ${dateStr}*`,\n  ``,\n  `📋 *Queued:*     ${totalQueued} CVs generated`,\n  `⏭ *Skipped:*    ${totalSkipped} (score too low)`,\n  `🔁 *Duplicates:* ${totalDuplicates} (already seen)`,\n  ``,\n  `📌 *By source:*`,\n  `  • Indeed:      ${i.queued}Q / ${i.skipped}S / ${i.duplicates}D`,\n  `  • Bayt:        ${b.queued}Q / ${b.skipped}S / ${b.duplicates}D`,\n  `  • Naukrigulf:  ${n.queued}Q / ${n.skipped}S / ${n.duplicates}D`,\n].join('\\n');\n\nreturn [{ json: { message: msg, date: dateStr, totalQueued, totalSkipped, totalDuplicates } }];"
+      },
+      "id": "01ce6d2c-5ac8-4a52-8cde-9c4b4b3100a0",
+      "name": "🧮 Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "shibilshamz123@gmail.com",
+        "toEmail": "shibilshamz123@gmail.com",
+        "subject": "=🤖 AI Job Hunter — {{ $json.date }}",
+        "emailFormat": "text",
+        "text": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1008,
+        288
+      ],
+      "id": "f532ed9e-a124-4fe2-8e10-0c19560b7ac3",
+      "name": "Send an Email",
+      "webhookId": "685ad011-a858-4e9f-bf06-3a55b0af1f10",
+      "credentials": {
+        "smtp": {
+          "id": "6cQVlzBKWb8SM1im",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 17 * * *"
+            }
+          ]
+        }
+      },
+      "id": "f9554dfd-482d-49f4-a27e-a76f08079824",
+      "name": "Daily 5PM UAE",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        288
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "🕷 Run All Scrapers": {
+      "main": [
+        [
+          {
+            "node": "🧮 Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧮 Format Message": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 5PM UAE": {
+      "main": [
+        [
+          {
+            "node": "🕷 Run All Scrapers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Dubai",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "J6Qel1om0F7q6VYj"
+  },
+  "versionId": "ab6856d5-32e3-4c64-aa03-359231ad5d5f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2f1d424dc63cd475cf879ea9ea4d6b23d1e59b7d460b8a74f27cb60a41547956"
+  },
+  "nodeGroups": [],
+  "id": "NijngoQZevi6SbYB",
+  "tags": []
+}
