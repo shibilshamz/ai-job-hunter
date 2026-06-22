@@ -1,6 +1,7 @@
 # Credentials & secrets
 credentials/
-*.json
+credentials/*.json
+paper_state.json
 .env
 .env.*
 *.key
