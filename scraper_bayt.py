@@ -217,4 +217,11 @@ def run_bayt_scraper() -> dict:
 
 
 if __name__ == "__main__":
-    run_bayt_scraper()
+    from scraper_stats import print_stats
+    result = run_bayt_scraper()
+    print_stats(
+        queued=result["queued"],
+        skipped=result["skipped"],
+        duplicates=result["duplicates"],
+        source="bayt"
+    )

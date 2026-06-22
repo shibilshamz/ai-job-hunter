@@ -391,4 +391,11 @@ def run_indeed_scraper():
 
 
 if __name__ == "__main__":
-    run_indeed_scraper()
+    from scraper_stats import print_stats
+    result = run_indeed_scraper()
+    print_stats(
+        queued=result["queued"],
+        skipped=result["skipped"],
+        duplicates=result["duplicates"],
+        source="indeed"
+    )

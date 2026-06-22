@@ -220,4 +220,11 @@ def run_naukrigulf_scraper() -> dict:
 
 
 if __name__ == "__main__":
-    run_naukrigulf_scraper()
+    from scraper_stats import print_stats
+    result = run_naukrigulf_scraper()
+    print_stats(
+        queued=result["queued"],
+        skipped=result["skipped"],
+        duplicates=result["duplicates"],
+        source="naukrigulf"
+    )

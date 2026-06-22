@@ -1,0 +1,26 @@
+# Credentials & secrets
+credentials/
+*.json
+.env
+.env.*
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Generated artifacts
+cvs/
+*.pdf
+
+# Logs
+*.log
+nohup.out
+
+# OS
+.DS_Store
+Thumbs.db
