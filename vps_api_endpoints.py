@@ -7,13 +7,22 @@ from flask import request, jsonify, send_from_directory, abort
 import gspread
 from google.oauth2.service_account import Credentials
 
+from sheets_manager import STATUS
+
 EXT_API_TOKEN = os.environ.get("EXT_API_TOKEN")
 SPREADSHEET_ID = os.environ.get("GSHEETS_SPREADSHEET_ID")
 CREDS_PATH = os.environ.get("GSHEETS_CREDENTIALS_PATH")
-CV_DIR = "/root/job-hunter/cvs"
+CV_DIR = os.environ.get("CV_OUTPUT_DIR", "/root/job-hunter/cvs")
 
-STATUS_READY = "Queued 🟡"
-STATUS_APPLIED = "Applied ✅"
+# Source these from sheets_manager rather than hardcoding — the labels were
+# renamed once already ("Queued 🟡" -> "CV Ready 🟡") and this module kept
+# filtering on the old string, hiding every job logged since.
+STATUS_READY = STATUS["queued"]
+STATUS_APPLIED = STATUS["manual_applied"]
+
+# Rows written before the June 2026 rename still carry the old label.
+LEGACY_READY = "Queued 🟡"
+READY_LABELS = {STATUS_READY, LEGACY_READY}
 
 _SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
@@ -41,7 +50,7 @@ def register_extension_api(app):
     @_require_token
     def api_jobs():
         rows = _sheet().get_all_records()
-        ready = [r for r in rows if str(r.get("Status", "")).strip() == STATUS_READY]
+        ready = [r for r in rows if str(r.get("Status", "")).strip() in READY_LABELS]
         return jsonify(ready)
 
     @app.route("/api/mark-applied", methods=["POST"])
