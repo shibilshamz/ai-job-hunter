@@ -21,7 +21,8 @@ def run_all():
     indeed     = run_scraper("scraper_indeed.py")
     bayt       = run_scraper("scraper_bayt.py")
     naukrigulf = run_scraper("scraper_naukrigulf.py")
-    return jsonify({"indeed": indeed, "bayt": bayt, "naukrigulf": naukrigulf})
+    linkedin   = run_scraper("scraper_linkedin.py")
+    return jsonify({"indeed": indeed, "bayt": bayt, "naukrigulf": naukrigulf, "linkedin": linkedin})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5679)
