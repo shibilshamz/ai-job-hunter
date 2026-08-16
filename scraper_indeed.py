@@ -1,22 +1,25 @@
 """
 scraper_indeed.py
-Indeed job scraper using JSearch API (no Cloudflare issues)
+Indeed job scraper using Apify's Indeed Scraper actor (misceres/indeed-scraper).
 + Easy Apply bot via Playwright for matched jobs.
 
 Pipeline:
-1. JSearch API → fetch jobs for each keyword in Dubai/UAE
+1. Apify actor → fetch jobs for each search term in Dubai/UAE
 2. scorer.py → score each JD, skip < 7
 3. cv_generator.py → generate tailored PDF
 4. Playwright → Easy Apply if score >= 8 and easy_apply flag set
 5. sheets_manager.py → log everything to Google Sheet
+
+NOTE: Migrated from JSearch/RapidAPI (2026-07) — the old JSEARCH_API_KEY
+env var is no longer used by this file.
 """
 
 import os
 import time
-import json
 import random
 import logging
-import requests
+from datetime import timedelta
+from apify_client import ApifyClient
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 from scorer import score_job, tailor_cv
@@ -27,26 +30,24 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [Indeed] %(message)s
 log = logging.getLogger(__name__)
 
 # ── Config ────────────────────────────────────────────────────────────────────
-JSEARCH_API_KEY = os.environ.get("JSEARCH_API_KEY", "")
-JSEARCH_URL     = "https://jsearch.p.rapidapi.com/search"
-JSEARCH_HEADERS = {
-    "x-rapidapi-host": "jsearch.p.rapidapi.com",
-    "x-rapidapi-key":  JSEARCH_API_KEY,
-}
+APIFY_API_TOKEN = os.environ.get("APIFY_API_TOKEN", "")
+INDEED_ACTOR_ID = "misceres/indeed-scraper"
 
-SEARCH_QUERIES = [
-    "AI Automation Developer Dubai",
-    "n8n developer UAE",
-    "workflow automation engineer Dubai",
-    "AI Agent developer UAE",
-    "RPA Developer Dubai",
-    "AI Ops engineer UAE",
-    "process automation developer Dubai",
+SEARCH_TERMS = [
+    "AI Automation Developer",
+    "n8n developer",
+    "workflow automation engineer",
+    "AI Agent developer",
+    "RPA Developer",
+    "AI Ops engineer",
+    "process automation developer",
 ]
 
-MAX_JOBS_PER_QUERY = 10
-SCORE_THRESHOLD    = 7
-APPLY_THRESHOLD    = 8
+INDEED_COUNTRY  = "AE"          # United Arab Emirates
+INDEED_LOCATION = "Dubai"
+MAX_ITEMS_PER_QUERY = 15
+SCORE_THRESHOLD = 7
+APPLY_THRESHOLD = 8
 
 CANDIDATE = {
     "first_name": "Shibil",
@@ -69,55 +70,56 @@ def _sleep(min_s=1, max_s=3):
     time.sleep(random.uniform(min_s, max_s))
 
 
-# ── JSearch API fetch ─────────────────────────────────────────────────────────
-def fetch_jobs_jsearch(query: str) -> list[dict]:
+# ── Apify fetch ───────────────────────────────────────────────────────────────
+def fetch_jobs_apify(query: str) -> list[dict]:
     """
-    Fetches jobs from JSearch API for a given query.
-    Returns list of normalized job dicts.
+    Runs the Apify Indeed Scraper actor for a given search term and
+    returns normalized job dicts. Returns [] on any failure (mirrors old
+    JSearch behavior so the rest of the pipeline doesn't need to change).
     """
-    log.info(f"JSearch query: {query}")
-    params = {
-        "query":        query,
-        "page":         "1",
-        "num_pages":    "1",
-        
-        "employment_types": "FULLTIME,CONTRACTOR",
+    if not APIFY_API_TOKEN:
+        log.error("APIFY_API_TOKEN is not set — check your env / Supervisor config")
+        return []
+
+    log.info(f"Apify Indeed query: {query}")
+    client = ApifyClient(APIFY_API_TOKEN)
+	
+    run_input = {
+        "position": query,
+        "country": INDEED_COUNTRY,
+        "location": INDEED_LOCATION,
+        "maxItems": MAX_ITEMS_PER_QUERY,
+        "saveOnlyUniqueItems": True,
     }
 
     try:
-        resp = requests.get(JSEARCH_URL, headers=JSEARCH_HEADERS, params=params, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        run = client.actor(INDEED_ACTOR_ID).call(run_input=run_input, timeout=timedelta(seconds=90))
+        dataset_id = run.get("defaultDatasetId") if isinstance(run, dict) else getattr(run, "default_dataset_id", None)
+        if not dataset_id:
+            log.error("Apify run returned no dataset id")
+            return []
 
         jobs = []
-        for item in data.get("data", [])[:MAX_JOBS_PER_QUERY]:
-            # Normalize to our internal format
-            apply_link = (
-                item.get("job_apply_link") or
-                item.get("job_google_link") or ""
-            )
+        for item in client.dataset(dataset_id).iterate_items():
+            apply_link = item.get("externalApplyLink") or item.get("url") or ""
             jobs.append({
-                "title":       item.get("job_title", "Unknown"),
-                "company":     item.get("employer_name", "Unknown"),
-                "link":        apply_link,
-                "description": item.get("job_description", ""),
-                "easy_apply":  item.get("job_apply_is_direct", False),
-                "platform":    "Indeed" if "indeed" in apply_link.lower() else "Other",
-                "location":    ", ".join(filter(None, [item.get("job_city"), item.get("job_country")])),
+                "title":       item.get("positionName", "Unknown"),
+                "company":     item.get("company", "Unknown"),
+                "link":        item.get("url") or apply_link,
+                "description": item.get("description", ""),
+                # Apify Indeed actor doesn't expose a reliable "direct apply"
+                # signal like JSearch's job_apply_is_direct did — default to
+                # False (queue only) rather than risk mis-triggering the bot.
+                "easy_apply":  False,
+                "platform":    "Indeed",
+                "location":    item.get("location", ""),
             })
 
         log.info(f"  Found {len(jobs)} jobs")
         return jobs
 
-    except requests.exceptions.HTTPError as e:
-        if resp.status_code == 429:
-            log.error("JSearch rate limit hit — waiting 60s")
-            time.sleep(60)
-        else:
-            log.error(f"JSearch HTTP error: {e}")
-        return []
     except Exception as e:
-        log.error(f"JSearch fetch error: {e}")
+        log.error(f"Apify Indeed fetch error: {e}")
         return []
 
 
@@ -130,7 +132,6 @@ def _easy_apply(page, job: dict, cv_path: str) -> bool:
         page.goto(job["link"], wait_until="domcontentloaded", timeout=30000)
         _sleep(2, 3)
 
-        # Find Apply button
         apply_btn = None
         for selector in [
             "button:has-text('Apply now')",
@@ -151,7 +152,6 @@ def _easy_apply(page, job: dict, cv_path: str) -> bool:
         apply_btn.click()
         _sleep(2, 3)
 
-        # Step through form
         for step in range(8):
             log.info(f"  Form step {step + 1}")
 
@@ -160,7 +160,6 @@ def _easy_apply(page, job: dict, cv_path: str) -> bool:
             _fill_field(page, "input[type='email']",     CANDIDATE["email"])
             _fill_field(page, "input[type='tel']",       CANDIDATE["phone"])
 
-            # Upload CV
             for fi in page.query_selector_all("input[type='file']"):
                 try:
                     fi.set_input_files(cv_path)
@@ -168,7 +167,6 @@ def _easy_apply(page, job: dict, cv_path: str) -> bool:
                 except:
                     pass
 
-            # Fill textareas
             for ta in page.query_selector_all("textarea"):
                 try:
                     label = _get_label(page, ta).lower()
@@ -181,17 +179,14 @@ def _easy_apply(page, job: dict, cv_path: str) -> bool:
                 except:
                     pass
 
-            # Handle radio/dropdowns
             _handle_radios(page)
             _handle_dropdowns(page)
 
-            # Check for confirmation
             body = page.inner_text("body").lower()
             if any(k in body for k in ["submitted", "thank you for applying", "successfully applied"]):
                 log.info("  ✅ Application submitted!")
                 return True
 
-            # Click Next/Submit
             submitted = _click_next(page)
             if submitted:
                 _sleep(2, 3)
@@ -276,7 +271,6 @@ def run_indeed_scraper():
     stats = {"auto_applied": 0, "queued": 0, "skipped": 0, "failed": 0, "duplicates": 0}
     seen_links = set()
 
-    # Init Playwright once for Easy Apply
     pw_context = sync_playwright().start()
     browser = pw_context.chromium.launch(
         headless=True,
@@ -287,12 +281,12 @@ def run_indeed_scraper():
         viewport={"width": 1280, "height": 800},
     ).new_page()
 
-    for query in SEARCH_QUERIES:
+    for query in SEARCH_TERMS:
         log.info(f"\n{'='*50}")
         log.info(f"Query: {query}")
         log.info(f"{'='*50}")
 
-        jobs = fetch_jobs_jsearch(query)
+        jobs = fetch_jobs_apify(query)
         _sleep(1, 2)
 
         for job in jobs:
@@ -300,12 +294,10 @@ def run_indeed_scraper():
             if not link:
                 continue
 
-            # Dedup within run
             if link in seen_links:
                 continue
             seen_links.add(link)
 
-            # Dedup against sheet
             if job_exists(link):
                 log.info(f"Already logged: {job['title']} @ {job['company']}")
                 stats["duplicates"] += 1
@@ -313,13 +305,11 @@ def run_indeed_scraper():
 
             log.info(f"\nProcessing: {job['title']} @ {job['company']}")
 
-            # Use JSearch description directly (no need to scrape page)
             jd_text = job["description"]
             if not jd_text or len(jd_text) < 100:
                 log.warning("JD too short — skipping")
                 continue
 
-            # Score with Claude
             score_result = score_job(job["title"], job["company"], jd_text)
             score  = score_result.get("score", 0)
             reason = score_result.get("reason", "")
@@ -337,13 +327,11 @@ def run_indeed_scraper():
                 stats["skipped"] += 1
                 continue
 
-            # Tailor CV
             log.info(f"Score {score}/10 — tailoring CV")
             cv_data  = tailor_cv(jd_text, score_result)
             cv_path  = generate_cv(job["company"], cv_data["summary"], cv_data["skills"])
             cv_fname = os.path.basename(cv_path)
 
-            # Auto-apply or queue
             if job["easy_apply"] and score >= APPLY_THRESHOLD:
                 log_job(
                     platform="Indeed",
