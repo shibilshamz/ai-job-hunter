@@ -1,8 +1,12 @@
 from flask import Flask, jsonify
 import subprocess, os, json
 
+from vps_api_endpoints import register_extension_api
+
 app = Flask(__name__)
 ENV = {**os.environ, "PYTHONUNBUFFERED": "1"}
+
+register_extension_api(app)
 
 def run_scraper(script):
     result = subprocess.run(
