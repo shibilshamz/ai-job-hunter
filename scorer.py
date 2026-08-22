@@ -30,17 +30,17 @@ Current Role: Lab Assistant, Sterling Perfumes Industries LLC, Dubai UAE
 Target Role: AI Automation Developer / Agent Developer / n8n Developer / RPA Developer / AI Ops
 
 Key Projects:
-- Stock Trading Agent v2: Autonomous NSE paper trading agent (Python, Groq LLaMA, yfinance, pandas-ta, Telegram alerts, 24/7 on Ubuntu VPS, Supervisor, MCP server)
-- AI Job Hunter: 7-node n8n pipeline on VPS — scrapes jobs, scores with Claude API, delivers Gmail digest
+- Stock Trading Agent v3: Plugin-based NSE trading platform (Python, FastAPI, yfinance, Upstox API, pandas-ta). Four contracts (Market, Strategy, DataFeed, Risk) auto-discovered by a registry, so one strategy runs unmodified across backtest, historical replay, paper and live modes. FastAPI + vanilla-JS dashboard with Excel trade reporting, deployed on Ubuntu VPS under systemd. 80 hermetic unit tests, no live network calls.
+- HR CV Pipeline (paid client delivery): 13-node self-hosted n8n workflow for a Dubai recruitment client. Google Drive trigger, PDF text extraction, Claude Haiku 4.5 extraction of 14 fields, two-level deduplication, Google Sheets append, error routing. Runs in Docker behind Caddy with automatic TLS.
+- AI Job Hunter: Python job-search pipeline on Ubuntu VPS — four scrapers (Indeed/LinkedIn via Apify, Bayt/NaukriGulf via JSearch), dedupe, Claude Haiku relevance scoring, automated tailored-CV generation, Google Sheets logging, Gmail digest. Flask runner under Supervisor, triggered daily at 5PM Asia/Dubai by self-hosted n8n.
 - StyleCode App: React/TypeScript/Vite web app with Claude API integration, deployed on Vercel (stylecode-app.vercel.app)
-- Live Trading Dashboard: Real-time portfolio dashboard (Python file server, port 8888, VPS-hosted)
 
 Technical Skills:
-- Automation & Agents: n8n, Python, Claude API, Groq API, LLaMA 3.3-70b, UiPath RPA (in progress)
-- Backend: Python, Node.js, REST APIs, Playwright, Supervisor, Cron
+- Automation & Agents: n8n (self-hosted, production), Python, Claude API, Claude Haiku, Groq API, LLaMA 3.1, MCP Protocol, Apify, UiPath RPA (in progress)
+- Backend: Python, FastAPI, Flask, Node.js, REST APIs, Playwright, Supervisor, Cron
 - Frontend: React, TypeScript, Vite, Tailwind CSS
-- Infrastructure: Ubuntu VPS (Hostinger KVM), GitHub Actions, SSH, Supervisor
-- Data: pandas, pandas-ta, yfinance, Google Sheets API, ReportLab
+- Infrastructure: Ubuntu VPS administration (Hostinger KVM), systemd, Supervisor, Docker, Caddy (reverse proxy + TLS), ufw, GitHub Actions, SSH
+- Data: pandas, pandas-ta, yfinance, SQLite, Google Sheets API, Google Drive API, ReportLab
 
 Education: B.Tech Chemical Engineering
 Languages: English (fluent), Malayalam (native), Arabic (basic)
@@ -51,26 +51,29 @@ Portfolio: shibilshamz.github.io
 # ── CV base content (for tailoring) ──────────────────────────────────────────
 CV_BASE = {
     "summary": (
-        "Self-taught AI Automation Builder with 3+ years of industry experience, "
+        "Self-taught AI Automation Builder with 3 years of UAE industry experience, "
         "transitioning from chemical engineering into AI agent development and workflow automation. "
-        "I build and deploy real production systems — a 24/7 autonomous stock trading agent, "
-        "a multi-node n8n job pipeline, and a live Claude-powered web app. "
-        "Skilled in Python, n8n, Claude API, Groq, React, and Ubuntu VPS deployment. "
-        "Seeking AI Automation / Agent Developer roles in Dubai UAE."
+        "I design, deploy, and administer production systems on infrastructure I run myself — a "
+        "plugin-based NSE trading platform, a daily job-search pipeline that writes its own tailored "
+        "CVs, and a paid CV-extraction workflow delivered for a Dubai recruitment client. "
+        "Skilled in Python, FastAPI, n8n, Claude API, and Ubuntu VPS administration. "
+        "Seeking AI Implementation / Automation / AI Ops roles in Dubai UAE."
     ),
     "skills": [
-        "n8n workflow automation (7-node pipelines, VPS-deployed)",
+        "n8n workflow automation (self-hosted, production workflows on own VPS)",
         "Python scripting (agents, scrapers, data pipelines)",
-        "Claude API & Groq API (LLM integration, prompt engineering)",
+        "Claude API & Claude Haiku (LLM integration, structured extraction, prompt engineering)",
+        "FastAPI / Flask (HTTP services, dashboards)",
         "Playwright (web scraping, browser automation)",
+        "Apify & JSearch/RapidAPI (job-board data sourcing)",
         "React / TypeScript / Vite (frontend development)",
-        "Ubuntu VPS administration (Hostinger KVM, Supervisor, Cron)",
+        "Ubuntu VPS administration (Hostinger KVM, systemd, Supervisor, ufw)",
+        "Docker & Caddy (containers, reverse proxy, automatic TLS)",
+        "Google Sheets API & Google Drive API (data logging, document pipelines)",
         "GitHub Actions (CI/CD workflows)",
-        "Google Sheets API (data logging, reporting)",
         "UiPath RPA (Developer Associate — in progress)",
         "ReportLab (PDF generation)",
         "REST API integration",
-        "Telegram Bot API",
     ],
 }
 

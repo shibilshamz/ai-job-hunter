@@ -47,7 +47,7 @@ MARGIN_RIGHT  = 18 * mm
 CONTACT = {
     "name":     "Shibil Shamsudheen",
     "title":    "AI Automation Builder · Agent Developer",
-    "tagline":  "Chemical engineer turned AI agent builder — I build autonomous systems that run while I sleep, from 24/7 trading agents to n8n automation pipelines.",
+    "tagline":  "Chemical engineer turned AI automation builder — I design, deploy, and administer production automation on infrastructure I run myself.",
     "location": "Dubai, UAE · Company Visa (Sterling Perfumes) — available to transfer",
     "phone":    "+971 54 322 0599",
     "email":    "shibilshamz123@gmail.com",
@@ -58,25 +58,34 @@ CONTACT = {
 
 PROJECTS = [
     {
-        "title":   "Stock Trading Agent v2",
-        "period":  "2025 – Present",
-        "links":   "Live Dashboard · GitHub",
+        "title":   "Stock Trading Agent v3",
+        "period":  "2026 – Present",
+        "links":   "Live Dashboard · github.com/shibilshamz/stock-trading-agent-v3",
         "bullets": [
-            "Autonomous NSE intraday paper trading agent in Python — scans top 20 Nifty 50 stocks every 15 min using yfinance and pandas-ta; processes ~96 trade signals/day across 20 symbols",
-            "3-layer signal system (ORB, VWAP, Momentum) validated by Groq LLaMA 3.1 — every trade signal confirmed by AI before execution",
-            "Deployed on Hostinger Ubuntu VPS managed by Supervisor — 6+ months continuous uptime, zero manual restarts; all signals and daily P&L pushed live to Telegram",
-            "Built a custom Node.js MCP server with 7 tools for natural-language agent control via Claude Desktop",
-            "Hermes Agent (OpenRouter / LLaMA 3.3-70B) configured as Telegram-based remote control interface",
+            "Plugin-based NSE trading platform built around four contracts (Market, Strategy, DataFeed, Risk) auto-discovered by a registry, so one strategy implementation runs unmodified across all four execution modes: backtest, historical replay, paper, and live",
+            "No separate backtest engine to drift out of sync with live logic; replay and backtest are look-ahead-safe by construction, since each mode only ever sees bars up to the current simulated timestamp",
+            "Ships two strategies (ORB+VWAP+Momentum, MA Crossover), free (yfinance) and real-time (Upstox API) data adapters, ATR-based position sizing, and circuit breakers",
+            "FastAPI + vanilla-JS dashboard with Excel trade reporting, deployed on a Hostinger Ubuntu VPS under systemd; 80 hermetic unit tests with no live network calls",
         ],
     },
     {
-        "title":   "AI Job Hunter Agent",
-        "period":  "May 2026",
-        "links":   "GitHub",
+        "title":   "HR CV Pipeline",
+        "period":  "2026 · Client delivery",
+        "links":   "github.com/shibilshamz/hr-cv-pipeline",
         "bullets": [
-            "7-node n8n workflow deployed on Hostinger VPS — scrapes UAE job boards daily and delivers curated AI-filtered digests via Gmail; zero manual intervention since deployment",
-            "Pipeline monitors 5+ platforms simultaneously, filters by role relevance using LLM classification, and delivers a ranked shortlist every morning",
-            "End-to-end automation: source scraping → deduplication → AI scoring → formatted email delivery — fully autonomous",
+            "Paid delivery for a Dubai recruitment client who was retyping 14 fields per CV by hand — they now drag PDFs into a Google Drive folder and structured candidate rows appear in Google Sheets about a minute later",
+            "13-node n8n pipeline: Drive trigger → PDF text extraction → Claude Haiku 4.5 field extraction → two-level deduplication → Sheets append → source file routed to /Done or /Errors",
+            "Failure paths designed in: a scanned image-only PDF routes to an error branch instead of killing the batch; runs on self-hosted n8n (Docker) behind Caddy with automatic TLS",
+        ],
+    },
+    {
+        "title":   "AI Job Hunter",
+        "period":  "May 2026 – Present",
+        "links":   "github.com/shibilshamz/ai-job-hunter",
+        "bullets": [
+            "Python job-search pipeline running daily on a Hostinger VPS: four scrapers (Indeed and LinkedIn via Apify, Bayt and NaukriGulf via JSearch) → deduplication → Claude Haiku relevance scoring → tailored CV generation → Google Sheets → Gmail digest",
+            "Flask runner under Supervisor exposes the pipeline over HTTP; a self-hosted n8n schedule triggers it at 5 PM Asia/Dubai and formats the digest email",
+            "Every qualifying role gets a CV tailored to its job description and rendered to PDF automatically; scrapers run as isolated subprocesses so one failing source degrades the run instead of ending it",
         ],
     },
     {
@@ -117,11 +126,11 @@ EXPERIENCE = [
 ]
 
 SKILLS_CATEGORIES = [
-    ("AI & Agents",    "Groq API · LLaMA 3.1 · Claude API · Gemini API · MCP Protocol · Telegram Bot API"),
-    ("Languages",      "Python 3.12 · Node.js · React / TypeScript · React Native"),
-    ("Automation",     "n8n · UiPath RPA (in progress) · GitHub Actions · Workflow Design"),
-    ("Infrastructure", "Ubuntu VPS · systemd · Supervisor · Vercel · Supabase"),
-    ("Data",           "pandas · pandas-ta · yfinance"),
+    ("AI & Agents",    "Claude API · Claude Haiku 4.5 · Gemini API · Groq API / LLaMA 3.1 · MCP Protocol"),
+    ("Automation",     "n8n (self-hosted, production) · Apify · JSearch / RapidAPI · Google Sheets API · Gmail API · GitHub Actions · UiPath RPA (in progress)"),
+    ("Languages",      "Python 3.12 · FastAPI · Flask · Node.js · React / TypeScript · React Native · Playwright"),
+    ("Infrastructure", "Ubuntu VPS administration · systemd · Supervisor · Docker · Caddy (reverse proxy + TLS) · Vercel · Supabase"),
+    ("Data",           "pandas · pandas-ta · yfinance · SQLite · Google Sheets as a system of record"),
     ("Enterprise",     "SAP ERP · QC/QA · GLP / EH&S · Fine Fragrance Compounding"),
     ("Soft Skills",    "Systems Thinking · Technical Documentation · Self-directed Learning"),
 ]
@@ -133,7 +142,7 @@ EDUCATION = {
 }
 
 CERTIFICATIONS = [
-    "UiPath RPA Developer Associate — in progress, exam targeted Q3 2026 (v2024.10 Academy curriculum)",
+    "UiPath RPA Developer Associate — in progress, exam targeted Q4 2026 (v2024.10 Academy curriculum)",
     "UAE Driving License (valid)",
     "Certified – Elementary First Aid & Industrial Safety",
     "Chemical Engineering Computations using MS Excel – Webinar Certificate",
@@ -388,14 +397,14 @@ if __name__ == "__main__":
         "AI Automation Developer with 3+ years of hands-on experience building and deploying "
         "production-grade automated workflows using n8n and Python. I specialise in developing "
         "AI agents powered by LLM APIs (Claude, Groq), integrating REST APIs and third-party "
-        "services, and managing infrastructure on Ubuntu VPS. I've built a live 7-node n8n job "
-        "pipeline, a 24/7 autonomous trading agent with Telegram notifications, and deployed "
-        "multiple automation systems on Linux servers. Seeking to leverage my workflow automation "
+        "services, and managing infrastructure on Ubuntu VPS. I've built a daily job-search pipeline "
+        "that writes its own tailored CVs, a plugin-based NSE trading platform, and a paid CV-extraction "
+        "workflow for a Dubai recruitment client. Seeking to leverage my workflow automation "
         "expertise and AI integration skills to drive automation initiatives in Dubai."
     )
 
     test_skills = [
-        "n8n workflow automation (7-node pipelines, VPS-deployed, multi-service integration)",
+        "n8n workflow automation (self-hosted, production workflows, multi-service integration)",
         "Python scripting (agents, scrapers, data pipelines, automation)",
         "LLM API integration (Claude API, Groq API, prompt engineering)",
         "REST API integration and third-party service orchestration",
@@ -405,7 +414,7 @@ if __name__ == "__main__":
         "Google Sheets API (data logging, reporting)",
         "UiPath RPA (Developer Associate — in progress)",
         "GitHub Actions (CI/CD workflows)",
-        "Telegram Bot API",
+        "Docker & Caddy (containers, reverse proxy, automatic TLS)",
         "ReportLab (PDF generation)",
     ]
 
